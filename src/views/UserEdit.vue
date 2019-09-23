@@ -6,14 +6,9 @@
 
 <script>
 import UserFrom from "./../components/UserFrom";
-
-const dummyUser = {
-  user: {
-    id: 1,
-    name: "管理者",
-    image: "https://i.pravatar.cc/300"
-  }
-};
+import usersAPI from "./../apis/users";
+import { Toast } from "./../utils/helpers";
+import { mapState } from "vuex";
 
 export default {
   components: {
@@ -28,26 +23,55 @@ export default {
       }
     };
   },
+  computed: {
+    ...mapState(["currentUser"])
+  },
   created() {
-    const { id } = this.$route.params;
-    this.fetchUser(id);
+    const { id: userId } = this.$route.params;
+    this.fetchUser(userId);
   },
   methods: {
-    handleAfterSubmit(formData) {
-      // 透過 API 將表單資料送到伺服器
-      for (let [name, value] of formData.entries()) {
-        console.log(name + ": " + value);
+    async handleAfterSubmit(formData) {
+      try {
+        const { data, statusText } = await usersAPI.update({
+          userId: this.user.id,
+          formData
+        });
+
+        if (statusText !== "OK" || data.status !== "success") {
+          throw new Error(statusText);
+        }
+
+        this.$router.push({ name: "user" });
+      } catch (error) {
+        Toast.fire({
+          type: "error",
+          title: "無法修改資料，請稍後再試"
+        });
       }
     },
-    fetchUser(userId) {
-      console.log("fetchUser id:", userId);
-      const { user } = dummyUser;
-      this.user = {
-        ...this.user,
-        id: user.id,
-        name: user.name,
-        image: user.image
-      };
+    async fetchUser(userId) {
+      try {
+        const { data, statusText } = await usersAPI.get({ userId });
+
+        if (statusText !== "OK") {
+          throw new Error(statusText);
+        }
+
+        const { profile } = data;
+
+        this.user = {
+          ...this.user,
+          id: profile.id,
+          name: profile.name,
+          image: profile.image
+        };
+      } catch (error) {
+        Toast.fire({
+          type: "error",
+          title: "無法取得使用者資料，請稍後再試"
+        });
+      }
     }
   }
 };

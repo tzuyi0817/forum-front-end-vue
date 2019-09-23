@@ -33,11 +33,17 @@
       />
     </div>
 
-    <button type="submit" class="btn btn-primary">Submit</button>
+    <button
+      type="submit"
+      class="btn btn-primary"
+      :disabled="isProcessing"
+    >{{ isProcessing ? "處理中..." : "送出" }}</button>
   </form>
 </template>
 
 <script>
+import { mapState } from "vuex";
+
 export default {
   props: {
     initialUser: {
@@ -46,6 +52,10 @@ export default {
         name: "",
         image: ""
       })
+    },
+    isProcessing: {
+      type: Boolean,
+      default: false
     }
   },
   data() {
@@ -55,6 +65,17 @@ export default {
         image: ""
       }
     };
+  },
+  computed: {
+    ...mapState(["currentUser"])
+  },
+  watch: {
+    initialUser(user) {
+      this.user = {
+        ...this.user,
+        ...user
+      };
+    }
   },
   created() {
     this.user = {
@@ -71,6 +92,14 @@ export default {
       this.user.image = imageURL;
     },
     handleSubmit(e) {
+      if (!this.user.name) {
+        Toast.fire({
+          type: "warning",
+          title: "請填寫餐廳名稱"
+        });
+        return;
+      }
+
       const form = e.target; // <form></form>
       const formData = new FormData(form);
       this.$emit("after-submit", formData);

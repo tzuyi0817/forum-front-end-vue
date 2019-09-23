@@ -1,6 +1,6 @@
 <template>
   <nav class="navbar navbar-expand-lg fixed-top navbar-dark bg-dark">
-    <a class="navbar-brand" href="/">餐廳評論網</a>
+    <router-link class="navbar-brand" to="/restaurants">餐廳評論網</router-link>
     <button
       class="navbar-toggler"
       type="button"
@@ -24,7 +24,11 @@
             :to="{name: 'user', params: {id: currentUser.id }}"
             class="text-white mr-3"
           >{{ currentUser.name || '使用者'}} 您好</router-link>
-          <button type="button" class="btn btn-sm btn-outline-success my-2 my-sm-0">登出</button>
+          <button
+            type="button"
+            class="btn btn-sm btn-outline-success my-2 my-sm-0"
+            @click="logout"
+          >登出</button>
         </template>
       </div>
     </div>
@@ -32,44 +36,35 @@
 </template>
 
 <script>
-// seed data
-const dummyUser = {
-  currentUser: {
-    id: 1,
-    name: "管理者",
-    email: "root@example.com",
-    image: "https://i.pravatar.cc/300",
-    isAdmin: true
-  },
-  isAuthenticated: true
-};
+import { mapState } from "vuex";
 
 export default {
   name: "Navbar",
-  // Vue 會在沒有資料時使用此預設值
-  data() {
-    return {
-      currentUser: {
-        id: -1,
-        name: "",
-        email: "",
-        image: "",
-        isAdmin: false
-      },
-      isAuthenticated: false
-    };
-  },
-  created() {
-    this.fetchUser();
+  computed: {
+    ...mapState(["currentUser", "isAuthenticated"])
   },
   methods: {
-    fetchUser() {
-      this.currentUser = {
-        ...this.currentUser,
-        ...dummyUser.currentUser
-      };
-      this.isAuthenticated = dummyUser.isAuthenticated;
+    logout() {
+      this.$store.commit("revokeAuthentication");
+      this.$router.push("/signin");
     }
   }
 };
 </script>
+
+<style scoped>
+.navbar-toggler {
+  min-width: 70px;
+  margin-right: 0;
+}
+
+nav.bg-dark {
+  padding: 14px 16px;
+  background-color: #bd2333 !important;
+}
+
+.navbar-brand {
+  font-size: 19px;
+  padding: 0;
+}
+</style>

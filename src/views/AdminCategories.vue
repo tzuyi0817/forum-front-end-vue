@@ -18,7 +18,8 @@
         </div>
       </div>
     </form>
-    <table class="table">
+    <Spinner v-if="isLoading" />
+    <table v-else class="table">
       <thead class="thead-dark">
         <tr>
           <th scope="col" width="60">#</th>
@@ -66,19 +67,22 @@
 
 <script>
 import AdminNav from "@/components/AdminNav";
+import Spinner from "./../components/Spinner";
 import adminAPI from "./../apis/admin";
 import { Toast } from "./../utils/helpers";
 
 export default {
   components: {
-    AdminNav
+    AdminNav,
+    Spinner
   },
   // 定義 Vue 中使用的 data 資料
   data() {
     return {
       newCategoryName: "",
       categories: [],
-      isProcessing: false
+      isProcessing: false,
+      isLoading: true
     };
   },
   created() {
@@ -97,7 +101,9 @@ export default {
           ...category,
           isEditing: false
         }));
+        this.isLoading = false;
       } catch (error) {
+        this.isLoading = false;
         Toast.fire({
           type: "error",
           title: "無法取得餐廳類別資料，請稍後再試"

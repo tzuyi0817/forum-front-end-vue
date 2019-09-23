@@ -23,20 +23,20 @@
             </li>
           </ul>
           <template v-if="isCurrentUser">
-            <router-link :to="{name:'user-edit', params:'user.id'}" class="btn btn-primary">Edit</router-link>
+            <router-link :to="{name:'user-edit', params:{id: user.id}}" class="btn btn-primary">Edit</router-link>
           </template>
           <template v-else>
             <button
               v-if="isFollowed"
               type="button"
               class="btn btn-danger"
-              @click.stop.prevent="removeFollowing()"
+              @click.stop.prevent="removeFollowing(user.id)"
             >取消追蹤</button>
             <button
               v-else
               type="button"
               class="btn btn-primary"
-              @click.stop.prevent="addFollowing()"
+              @click.stop.prevent="addFollowing(user.id)"
             >追蹤</button>
           </template>
         </div>
@@ -47,6 +47,8 @@
 
 <script>
 import { emptyImageFilter } from "./../utils/mixins";
+import usersAPI from "./../apis/users";
+import { Toast } from "./../utils/helpers";
 
 export default {
   name: "UserProfileCard",
@@ -70,12 +72,46 @@ export default {
       isFollowed: this.initialIsFollowed
     };
   },
+  watch: {
+    initialIsFollowed(isFollowed) {
+      this.isFollowed = {
+        ...this.isFollowed,
+        ...isFollowed
+      };
+    }
+  },
   methods: {
-    addFollowing() {
-      this.isFollowed = true;
+    async addFollowing(userId) {
+      try {
+        const { data, statusText } = await usersAPI.addFollowing({ userId });
+
+        if (statusText !== "OK" || data.status !== "success") {
+          throw new Error(statusText);
+        }
+
+        this.isFollowed = true;
+      } catch (error) {
+        Toast.fire({
+          type: "error",
+          title: "無法追蹤，請稍後再試"
+        });
+      }
     },
-    removeFollowing() {
-      this.isFollowed = false;
+    async removeFollowing(userId) {
+      try {
+        const { data, statusText } = await usersAPI.deleteFollowing({ userId });
+
+        if (statusText !== "OK" || data.status !== "success") {
+          throw new Error(statusText);
+        }
+
+        this.isFollowed = false;
+      } catch (error) {
+        Toast.fire({
+          type: "error",
+          title: "無法取消追蹤，請稍後再試"
+        });
+      }
     }
   }
 };
